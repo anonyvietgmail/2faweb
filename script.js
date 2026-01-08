@@ -1,5 +1,5 @@
 /**
- * 2FA Authenticator - Dynamic Sync & Progress Bar
+ * 2FA Authenticator - Smart Sync & Heavy Duty Optimization
  */
 
 const secretInput = document.getElementById('secretKey');
@@ -10,11 +10,12 @@ const errorMsg = document.getElementById('errorMsg');
 const copyToast = document.getElementById('copyToast');
 
 let currentToken = '';
-let cycleStartTime = Date.now(); // Used for visual sync
-let isInitialSync = true;
+let cycleStartTime = Date.now();
+let pollTimeout = null;
 
-// Fetch function called every second
 async function poll2FA() {
+    if (document.hidden) return; // Save resources when tab is hidden
+
     const key = secretInput.value.trim().replace(/\s/g, '');
     if (!key || key.length < 6) {
         codeDisplay.style.display = 'none';
@@ -26,39 +27,43 @@ async function poll2FA() {
 
     try {
         const response = await fetch(`/api/index?key=${key}&t=${Date.now()}`);
-        if (!response.ok) throw new Error();
-
         const data = await response.json();
 
         if (data && data.token) {
-            // IF TOKEN CHANGED: Start a fresh 30s cycle
+            // IF TOKEN CHANGED (Success Path)
             if (data.token !== currentToken) {
                 currentToken = data.token;
                 codeDisplay.textContent = currentToken;
                 codeDisplay.style.display = 'flex';
                 errorMsg.style.display = 'none';
 
-                // SYNC: Set the visual start time to NOW because we just got a new token
+                // RESET SYNC: A new cycle has officially started
                 cycleStartTime = Date.now();
-                isInitialSync = false;
+
+                // Perfect hit! Now sleep for 30 seconds
+                clearTimeout(pollTimeout);
+                pollTimeout = setTimeout(poll2FA, 30000);
+                return;
             }
         }
-    } catch (err) {
-        if (key.length > 10) {
-            errorMsg.style.display = 'block';
-            errorMsg.textContent = "Invalid Secret Key or API Error!";
-        }
-    }
+    } catch (err) { }
+
+    // IF TOKEN NOT CHANGED YET: Server might be lagging
+    // Check every 1 second until the token actually flips
+    clearTimeout(pollTimeout);
+    pollTimeout = setTimeout(poll2FA, 1000);
 }
 
-// Update the thin progress bar
 function updateProgressBar() {
-    const now = Date.now();
-    let elapsed = (now - cycleStartTime) % 30000;
+    if (document.hidden) return;
 
-    // If we haven't synced yet, just show a "sample" 30s loop
-    // If we HAVE synced, we represent the 30s life of that token
-    const percentage = 100 - (elapsed / 30000) * 100;
+    const now = Date.now();
+    let elapsed = now - cycleStartTime;
+
+    // Progress bar reflects the 30s window
+    // We cap it at 0 to avoid going backwards if server is late
+    let percentage = 100 - (elapsed / 30000) * 100;
+    if (percentage < 0) percentage = 0;
 
     if (progressBar) {
         progressBar.style.width = `${percentage}%`;
@@ -66,26 +71,15 @@ function updateProgressBar() {
     }
 }
 
-// Master Loop
-function startLoops() {
-    // Check for token changes every 0.5 seconds for ultra-fast sync
-    setInterval(poll2FA, 500);
+document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && secretInput.value) poll2FA();
+});
 
-    // Smooth progress bar update (60fps for luxury feel)
-    const animate = () => {
-        updateProgressBar();
-        requestAnimationFrame(animate);
-    };
-    requestAnimationFrame(animate);
-}
-
-// Immediate fetch on input
 secretInput.addEventListener('input', () => {
-    currentToken = ''; // Force sync on new input
+    currentToken = '';
     poll2FA();
 });
 
-// Clipboard functionality
 codeDisplay.addEventListener('click', () => {
     if (currentToken && currentToken !== '------') {
         navigator.clipboard.writeText(currentToken).then(() => {
@@ -96,12 +90,15 @@ codeDisplay.addEventListener('click', () => {
 });
 
 window.onload = () => {
-    startLoops();
+    const animate = () => {
+        updateProgressBar();
+        requestAnimationFrame(animate);
+    };
+    requestAnimationFrame(animate);
 
-    // Auto-fill from URL
     const path = window.location.pathname.split('/').pop().trim();
     if (path && path.length > 5 && !path.includes('.')) {
         secretInput.value = path;
-        poll2FA();
     }
+    poll2FA();
 };
