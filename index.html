@@ -75,10 +75,21 @@
             background: #e9ecef;
         }
 
-        .timer {
-            font-size: 14px;
-            color: #666;
-            margin-top: 10px;
+        .progress-container {
+            width: 100%;
+            height: 4px;
+            background: #edf2f7;
+            border-radius: 2px;
+            margin: 10px 0 20px 0;
+            overflow: hidden;
+            display: none;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 100%;
+            background: #007bff;
+            transition: width 0.1s linear;
         }
 
         .error-msg {
@@ -126,13 +137,18 @@
 
 <body>
     <div class="container">
-        <h1>🔐 2FA Auth - Two Factor Authenticator</h1>
-        <input type="text" id="secretKey" placeholder="Enter Secret Key" maxlength="100" value="JBSWY3DPEHPK3PXP">
-        <div id="codeDisplay" class="code-display" style="display: none;">-----</div>
-        <div id="timer" class="timer"></div>
+        <h1>🔐 2FA Authenticator</h1>
+        <input type="text" id="secretKey" placeholder="Paste your Secret Key..." maxlength="100">
+
+        <div id="progressContainer" class="progress-container">
+            <div id="progressBar" class="progress-bar"></div>
+        </div>
+
+        <div id="codeDisplay" class="code-display">------</div>
         <div id="errorMsg" class="error-msg"></div>
+
         <div class="info-box">
-            This website was created by GMAIL TRUST SELLER
+            Powered by <a href="https://t.me/GmailTrust247" target="_blank">GMAIL TRUST SELLER</a>
         </div>
         <div id="copyToast" class="copy-toast">Copied to clipboard!</div>
     </div>

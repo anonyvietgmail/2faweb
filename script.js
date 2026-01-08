@@ -1,92 +1,81 @@
 /**
- * 2FA Auth - Siêu Tốc & Tự Động Đồng Bộ
+ * 2FA Authenticator - Realtime Polling & Progress Bar
  */
 
 const secretInput = document.getElementById('secretKey');
 const codeDisplay = document.getElementById('codeDisplay');
-const timerDisplay = document.getElementById('timer');
+const progressBar = document.getElementById('progressBar');
+const progressContainer = document.getElementById('progressContainer');
 const errorMsg = document.getElementById('errorMsg');
 const copyToast = document.getElementById('copyToast');
 
 let currentToken = '';
 let isFetching = false;
-let typingTimer;
 
-// Hàm lấy mã từ API (Tối ưu cho Vercel)
-async function fetch2FA(force = false) {
+// Fetch function called every second
+async function poll2FA() {
     const key = secretInput.value.trim().replace(/\s/g, '');
     if (!key || key.length < 6) {
         codeDisplay.style.display = 'none';
+        progressContainer.style.display = 'none';
         return;
     }
 
-    if (isFetching && !force) return;
-    isFetching = true;
+    progressContainer.style.display = 'block';
 
     try {
-        // Tăng tốc bằng cách gọi thẳng API, thêm timestamp để bỏ qua cache
         const response = await fetch(`/api/index?key=${key}&t=${Date.now()}`);
         if (!response.ok) throw new Error();
 
         const data = await response.json();
         if (data && data.token) {
-            currentToken = data.token;
-            codeDisplay.textContent = currentToken;
-            codeDisplay.style.display = 'flex';
-            errorMsg.style.display = 'none';
+            // Update UI only if token actually changed to keep it smooth
+            if (data.token !== currentToken) {
+                currentToken = data.token;
+                codeDisplay.textContent = currentToken;
+                codeDisplay.style.display = 'flex';
+                errorMsg.style.display = 'none';
+            }
         }
     } catch (err) {
-        // Chỉ hiện lỗi nếu key đủ dài và thực sự lỗi
         if (key.length > 10) {
             errorMsg.style.display = 'block';
-            errorMsg.textContent = "Không lấy được mã, kiểm tra lại Secret Key!";
+            errorMsg.textContent = "Invalid Secret Key or API Error!";
         }
-    } finally {
-        isFetching = false;
     }
 }
 
-// Xử lý đếm ngược và tự động cập nhật
-function initApp() {
-    const updateUI = () => {
-        const now = Date.now();
-        const seconds = Math.floor(now / 1000);
-        const remaining = 30 - (seconds % 30);
+// Update the thin progress bar every 100ms for smoothness
+function updateProgressBar() {
+    const now = Date.now();
+    const remainingSeconds = 30 - ((now / 1000) % 30);
+    const percentage = (remainingSeconds / 30) * 100;
 
-        if (timerDisplay) {
-            timerDisplay.textContent = `Mã mới sau: ${remaining}s`;
-        }
+    if (progressBar) {
+        progressBar.style.width = `${percentage}%`;
 
-        // TỰ ĐỘNG CẬP NHẬT: Gọi API trước khi hết thời gian 1 giây để đón đầu
-        if (remaining === 1 && !isFetching && secretInput.value) {
-            fetch2FA(true);
-        }
-
-        // Nếu vừa sang chu kỳ mới mà chưa có mã mới, gọi ngay
-        if (remaining === 30 && secretInput.value) {
-            fetch2FA(true);
-        }
-    };
-
-    setInterval(updateUI, 1000);
-    updateUI();
+        // Change color to red when running low (optional, set to constant for minimalist look)
+        progressBar.style.background = percentage < 20 ? '#e53e3e' : '#007bff';
+    }
 }
 
-// Khi người dùng gõ phím
+// Master Loop
+function startLoops() {
+    // Poll API every 1 second
+    setInterval(poll2FA, 1000);
+
+    // Smooth progress bar update (10fps)
+    setInterval(updateProgressBar, 100);
+}
+
+// Immediate fetch on input
 secretInput.addEventListener('input', () => {
-    clearTimeout(typingTimer);
-    // Nếu gõ/dán mã dài, thực hiện gọi ngay lập tức
-    if (secretInput.value.length > 20) {
-        fetch2FA(true);
-    } else {
-        // Nếu đang gõ dở, đợi 500ms để tránh lag trình duyệt
-        typingTimer = setTimeout(() => fetch2FA(true), 500);
-    }
+    poll2FA();
 });
 
-// Click copy
+// Clipboard functionality
 codeDisplay.addEventListener('click', () => {
-    if (currentToken) {
+    if (currentToken && currentToken !== '------') {
         navigator.clipboard.writeText(currentToken).then(() => {
             copyToast.classList.add('show');
             setTimeout(() => copyToast.classList.remove('show'), 2000);
@@ -95,12 +84,12 @@ codeDisplay.addEventListener('click', () => {
 });
 
 window.onload = () => {
-    initApp();
+    startLoops();
 
-    // Tự động lấy key từ đường dẫn URL: domain.com/SECRET
+    // Auto-fill from URL
     const path = window.location.pathname.split('/').pop().trim();
     if (path && path.length > 5 && !path.includes('.')) {
         secretInput.value = path;
-        fetch2FA(true);
+        poll2FA();
     }
 };
