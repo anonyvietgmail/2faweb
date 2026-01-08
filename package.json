@@ -1,0 +1,10 @@
+{
+    "name": "web-2fa-api",
+    "version": "1.0.0",
+    "description": "2FA Proxy API for 2fa.live",
+    "main": "api/index.js",
+    "dependencies": {
+        "express": "^4.18.2",
+        "cors": "^2.8.5"
+    }
+}
