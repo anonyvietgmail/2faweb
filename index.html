@@ -3,157 +3,308 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2FA Auth - Two Factor Authenticator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Authenticator Pro</title>
     <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <!-- QR Code Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
+        :root {
+            --ios-bg: #f2f2f7;
+            --ios-card: rgba(255, 255, 255, 0.82);
+            --ios-text: #000000;
+            --ios-blue: #007aff;
+            --ios-gray: #8e8e93;
+            --ios-border: rgba(0, 0, 0, 0.1);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --ios-bg: #000000;
+                --ios-card: rgba(28, 28, 30, 0.85);
+                --ios-text: #ffffff;
+                --ios-blue: #0a84ff;
+                --ios-gray: #8e8e93;
+                --ios-border: rgba(255, 255, 255, 0.1);
+            }
+        }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--ios-bg);
             margin: 0;
-            padding: 20px;
+            padding: 0;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            color: #333;
+            color: var(--ios-text);
+            transition: background-color 0.5s ease;
+        }
+
+        /* Futuristic iOS background details */
+        .blobs {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .blob {
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            background: var(--ios-blue);
+            filter: blur(100px);
+            opacity: 0.15;
+            border-radius: 50%;
+            animation: move 20s infinite alternate;
+        }
+
+        @keyframes move {
+            from {
+                transform: translate(-10%, -10%);
+            }
+
+            to {
+                transform: translate(20%, 30%);
+            }
         }
 
         .container {
-            background: white;
-            padding: 40px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            text-align: center;
-            max-width: 400px;
             width: 100%;
-            position: relative;
+            max-width: 480px;
+            /* Tăng chiều rộng */
+            padding: 24px;
+            box-sizing: border-box;
+            animation: ios-slide-up 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
 
-        h1 {
-            color: #007bff;
-            margin-bottom: 30px;
-            font-size: 24px;
+        @keyframes ios-slide-up {
+            from {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .app-header {
+            text-align: left;
+            margin-bottom: 32px;
+            padding-left: 8px;
+        }
+
+        .app-header h1 {
+            font-size: 34px;
+            font-weight: 700;
+            margin: 0;
+            letter-spacing: -1px;
+        }
+
+        .app-header p {
+            color: var(--ios-gray);
+            margin: 4px 0 0 0;
+            font-size: 15px;
+        }
+
+        .ios-card {
+            background: var(--ios-card);
+            backdrop-filter: blur(25px) saturate(180%);
+            -webkit-backdrop-filter: blur(25px) saturate(180%);
+            border-radius: 28px;
+            padding: 24px;
+            border: 1px solid var(--ios-border);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .input-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--ios-gray);
+            text-transform: uppercase;
+            margin-bottom: 12px;
+            padding-left: 4px;
+            display: block;
         }
 
         input[type="text"] {
             width: 100%;
-            padding: 12px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            font-size: 16px;
-            margin-bottom: 20px;
+            background: rgba(120, 120, 128, 0.12);
+            border: none;
+            border-radius: 14px;
+            padding: 16px;
+            font-size: 17px;
+            color: var(--ios-text);
             box-sizing: border-box;
-            text-align: center;
-            letter-spacing: 2px;
+            font-family: inherit;
+            margin-bottom: 12px;
         }
 
         input:focus {
-            border-color: #007bff;
-            outline: none;
+            outline: 2px solid var(--ios-blue);
         }
 
-        .code-display {
-            font-size: 48px;
-            font-weight: bold;
-            color: #007bff;
-            letter-spacing: 8px;
-            margin: 20px 0;
-            padding: 20px;
-            background: #f7fafc;
-            border-radius: 10px;
-            min-height: 60px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            transition: background 0.3s;
-            user-select: none;
-        }
-
-        .code-display:hover {
-            background: #e9ecef;
+        /* Progress Bar - iOS Style */
+        .progress-wrapper {
+            margin-bottom: 24px;
+            display: none;
         }
 
         .progress-container {
-            width: 100%;
-            height: 4px;
-            background: #edf2f7;
-            border-radius: 2px;
-            margin: 10px 0 20px 0;
+            height: 6px;
+            background: rgba(120, 120, 128, 0.2);
+            border-radius: 3px;
             overflow: hidden;
-            display: none;
         }
 
         .progress-bar {
             height: 100%;
             width: 100%;
-            background: #007bff;
-            transition: width 0.1s linear;
+            background: var(--ios-blue);
+            transition: width 0.1s linear, background-color 0.3s ease;
         }
 
-        .error-msg {
-            font-size: 14px;
-            color: #e53e3e;
-            margin-top: 10px;
-            padding: 10px;
-            background: #fed7d7;
-            border-radius: 5px;
+        /* Token Display */
+        .token-card {
+            text-align: center;
             display: none;
+            cursor: pointer;
+            transition: transform 0.2s cubic-bezier(0.1, 0.8, 0.2, 1);
         }
 
-        .info-box {
-            margin-top: 30px;
-            padding: 15px;
-            background: #e3f2fd;
-            border-radius: 8px;
+        .token-card:active {
+            transform: scale(0.96);
+        }
+
+        .token-value {
+            font-size: 48px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            margin: 8px 0;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .token-label {
             font-size: 14px;
-            color: #1976d2;
-            border-left: 4px solid #007bff;
+            color: var(--ios-gray);
+            margin-bottom: 4px;
+        }
+
+        /* QR Code Area */
+        .qr-section {
+            background: var(--ios-card);
+            backdrop-filter: blur(25px);
+            border-radius: 28px;
+            padding: 24px;
+            border: 1px solid var(--ios-border);
+            text-align: center;
+            display: none;
+            margin-top: 20px;
+        }
+
+        #qrcode {
+            display: inline-block;
+            background: white;
+            padding: 16px;
+            border-radius: 18px;
+            margin: 16px 0;
+        }
+
+        #qrcode img {
+            display: block;
+        }
+
+        .footer-info {
+            text-align: center;
+            margin-top: 32px;
+            font-size: 13px;
+            color: var(--ios-gray);
+        }
+
+        .footer-info a {
+            color: var(--ios-blue);
+            text-decoration: none;
+            font-weight: 600;
         }
 
         .copy-toast {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: #28a745;
+            position: fixed;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: rgba(0, 0, 0, 0.85);
             color: white;
-            padding: 12px 16px;
-            border-radius: 6px;
-            font-size: 14px;
-            opacity: 0;
-            transform: translateY(-10px);
-            transition: opacity 0.3s, transform 0.3s;
-            pointer-events: none;
-            z-index: 10;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-size: 15px;
+            font-weight: 500;
+            transition: all 0.5s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+            z-index: 1000;
+            white-space: nowrap;
         }
 
         .copy-toast.show {
-            opacity: 1;
-            transform: translateY(0);
+            transform: translateX(-50%) translateY(0);
         }
     </style>
 </head>
 
 <body>
-    <div class="container">
-        <h1>🔐 2FA Authenticator</h1>
-        <input type="text" id="secretKey" placeholder="Paste your Secret Key..." maxlength="100">
-
-        <div id="progressContainer" class="progress-container">
-            <div id="progressBar" class="progress-bar"></div>
-        </div>
-
-        <div id="codeDisplay" class="code-display">------</div>
-        <div id="errorMsg" class="error-msg"></div>
-
-        <div class="info-box">
-            Powered by <a href="https://t.me/GmailTrust247" target="_blank">GMAIL TRUST SELLER</a>
-        </div>
-        <div id="copyToast" class="copy-toast">Copied to clipboard!</div>
+    <div class="blobs">
+        <div class="blob"></div>
     </div>
 
-    <!-- Kết hợp JS từ file bên ngoài -->
+    <div class="container">
+        <header class="app-header">
+            <p id="date-string">Thursday, January 8</p>
+            <h1>Keychains</h1>
+        </header>
+
+        <div class="ios-card">
+            <label class="input-label">Security Key</label>
+            <input type="text" id="secretKey" placeholder="Enter key or paste link" autocomplete="off">
+
+            <div id="progressWrapper" class="progress-wrapper">
+                <div class="progress-container">
+                    <div id="progressBar" class="progress-bar"></div>
+                </div>
+            </div>
+
+            <div id="tokenCard" class="token-card">
+                <div class="token-label">Verification Code</div>
+                <div id="codeDisplay" class="token-value">000000</div>
+                <div class="token-label" style="margin-top: 8px;">Tap to copy</div>
+            </div>
+        </div>
+
+        <div id="qrSection" class="qr-section">
+            <div class="token-label">Scan to Add</div>
+            <div id="qrcode"></div>
+            <div class="token-label">Ready for other devices</div>
+        </div>
+
+        <div id="errorMsg"
+            style="color: #ff3b30; text-align: center; font-size: 14px; margin-top: 10px; display: none;"></div>
+
+        <footer class="footer-info">
+            Cloud Security • <a href="https://t.me/GmailTrust247" target="_blank">GmailTrust247</a>
+        </footer>
+    </div>
+
+    <div id="copyToast" class="copy-toast">Copied to Clipboard</div>
+
     <script src="script.js"></script>
 </body>
 

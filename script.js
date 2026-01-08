@@ -1,25 +1,40 @@
 /**
- * 2FA Authenticator - Zero-Waste Unix Sync
+ * Authenticator Pro - iOS 26 Inspired (Fixed QR & Size)
  */
 
 const secretInput = document.getElementById('secretKey');
 const codeDisplay = document.getElementById('codeDisplay');
+const tokenCard = document.getElementById('tokenCard');
 const progressBar = document.getElementById('progressBar');
-const progressContainer = document.getElementById('progressContainer');
+const progressWrapper = document.getElementById('progressWrapper');
+const qrSection = document.getElementById('qrSection');
+const qrcodeElement = document.getElementById('qrcode');
 const errorMsg = document.getElementById('errorMsg');
 const copyToast = document.getElementById('copyToast');
+const dateString = document.getElementById('date-string');
 
 let currentToken = '';
 let pollTimeout = null;
+let qrGenerator = null;
 
-// Hàm lấy mã 2FA
+// Initialize Date String
+const options = { weekday: 'long', month: 'long', day: 'numeric' };
+dateString.textContent = new Date().toLocaleDateString('en-US', options);
+
 async function fetch2FA() {
-    if (document.hidden) return; // Tiết kiệm tài nguyên tuyệt đối
+    if (document.hidden) return;
 
     const key = secretInput.value.trim().replace(/\s/g, '');
-    if (!key || key.length < 5) return;
+    if (!key || key.length < 5) {
+        tokenCard.style.display = 'none';
+        progressWrapper.style.display = 'none';
+        qrSection.style.display = 'none';
+        return;
+    }
 
-    progressContainer.style.display = 'block';
+    // HIỆN NGAY: Không đợi API
+    qrSection.style.display = 'block';
+    updateQRCode(key);
 
     try {
         const response = await fetch(`/api/index?key=${key}&t=${Date.now()}`);
@@ -28,53 +43,67 @@ async function fetch2FA() {
         if (data && data.token) {
             currentToken = data.token;
             codeDisplay.textContent = currentToken;
-            codeDisplay.style.display = 'flex';
+            tokenCard.style.display = 'block';
+            progressWrapper.style.display = 'block';
             errorMsg.style.display = 'none';
         }
-    } catch (err) { }
+    } catch (err) {
+        // Simple silent fail to keep clean UI
+    }
 
-    // LẬP KẾ HOẠCH GỌI TIẾP THEO (Tối ưu tuyệt đối)
     scheduleNextFetch();
+}
+
+function updateQRCode(key) {
+    if (!key) return;
+
+    // Tạo URI chuẩn cho Google/Apple Authenticator gánh được
+    const cleanKey = key.toUpperCase();
+    const uri = `otpauth://totp/Cloud:Account?secret=${cleanKey}&issuer=Cloud`;
+
+    // Xóa nội dung cũ để tạo mới (đảm bảo hiển thị)
+    qrcodeElement.innerHTML = '';
+
+    new QRCode(qrcodeElement, {
+        text: uri,
+        width: 200,
+        height: 200,
+        colorDark: "#000000",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.M
+    });
 }
 
 function scheduleNextFetch() {
     clearTimeout(pollTimeout);
-
     const now = Date.now();
-    // Tính số ms còn lại cho đến giây thứ 30 hoặc 00 tiếp theo của đồng hồ Trái đất
-    // Thêm 1000ms (1 giây) sai số để đảm bảo server 2fa.live đã kịp đổi mã
     const msUntilNextCycle = 31000 - (now % 30000);
-
     pollTimeout = setTimeout(fetch2FA, msUntilNextCycle);
 }
 
 function updateProgressBar() {
     if (document.hidden) return;
-
     const now = Date.now();
-    // Thanh tiến trình chạy theo giây thực tế của Trái đất (Standard TOTP)
     const remainingInCycle = 30000 - (now % 30000);
     const percentage = (remainingInCycle / 30000) * 100;
 
     if (progressBar) {
         progressBar.style.width = `${percentage}%`;
-        progressBar.style.background = percentage < 25 ? '#e53e3e' : '#007bff';
+        progressBar.style.backgroundColor = percentage < 25 ? '#ff3b30' : '#007aff';
     }
 }
 
-// Khi người dùng quay lại tab
 document.addEventListener('visibilitychange', () => {
     if (!document.hidden && secretInput.value) fetch2FA();
 });
 
-// Khi nhập key mới: Gọi ngay 1 lần để có mã, sau đó tự động vào guồng 30s
 secretInput.addEventListener('input', () => {
     currentToken = '';
     fetch2FA();
 });
 
-codeDisplay.addEventListener('click', () => {
-    if (currentToken && currentToken !== '------') {
+tokenCard.addEventListener('click', () => {
+    if (currentToken) {
         navigator.clipboard.writeText(currentToken).then(() => {
             copyToast.classList.add('show');
             setTimeout(() => copyToast.classList.remove('show'), 2000);
@@ -83,7 +112,6 @@ codeDisplay.addEventListener('click', () => {
 });
 
 window.onload = () => {
-    // Hoạt ảnh mượt 60fps
     const animate = () => {
         updateProgressBar();
         requestAnimationFrame(animate);
@@ -91,7 +119,7 @@ window.onload = () => {
     requestAnimationFrame(animate);
 
     const path = window.location.pathname.split('/').pop().trim();
-    if (path && path.length > 5 && !path.includes('.')) {
+    if (path && path.length > 5 && !path.includes('.') && path !== 'index.html') {
         secretInput.value = path;
         fetch2FA();
     }
