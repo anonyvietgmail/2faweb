@@ -1,5 +1,5 @@
 /**
- * 2FA Authenticator - Realtime Polling & Progress Bar
+ * 2FA Authenticator - Dynamic Sync & Progress Bar
  */
 
 const secretInput = document.getElementById('secretKey');
@@ -10,7 +10,8 @@ const errorMsg = document.getElementById('errorMsg');
 const copyToast = document.getElementById('copyToast');
 
 let currentToken = '';
-let isFetching = false;
+let cycleStartTime = Date.now(); // Used for visual sync
+let isInitialSync = true;
 
 // Fetch function called every second
 async function poll2FA() {
@@ -28,13 +29,18 @@ async function poll2FA() {
         if (!response.ok) throw new Error();
 
         const data = await response.json();
+
         if (data && data.token) {
-            // Update UI only if token actually changed to keep it smooth
+            // IF TOKEN CHANGED: Start a fresh 30s cycle
             if (data.token !== currentToken) {
                 currentToken = data.token;
                 codeDisplay.textContent = currentToken;
                 codeDisplay.style.display = 'flex';
                 errorMsg.style.display = 'none';
+
+                // SYNC: Set the visual start time to NOW because we just got a new token
+                cycleStartTime = Date.now();
+                isInitialSync = false;
             }
         }
     } catch (err) {
@@ -45,31 +51,37 @@ async function poll2FA() {
     }
 }
 
-// Update the thin progress bar every 100ms for smoothness
+// Update the thin progress bar
 function updateProgressBar() {
     const now = Date.now();
-    const remainingSeconds = 30 - ((now / 1000) % 30);
-    const percentage = (remainingSeconds / 30) * 100;
+    let elapsed = (now - cycleStartTime) % 30000;
+
+    // If we haven't synced yet, just show a "sample" 30s loop
+    // If we HAVE synced, we represent the 30s life of that token
+    const percentage = 100 - (elapsed / 30000) * 100;
 
     if (progressBar) {
         progressBar.style.width = `${percentage}%`;
-
-        // Change color to red when running low (optional, set to constant for minimalist look)
         progressBar.style.background = percentage < 20 ? '#e53e3e' : '#007bff';
     }
 }
 
 // Master Loop
 function startLoops() {
-    // Poll API every 1 second
-    setInterval(poll2FA, 1000);
+    // Check for token changes every 0.5 seconds for ultra-fast sync
+    setInterval(poll2FA, 500);
 
-    // Smooth progress bar update (10fps)
-    setInterval(updateProgressBar, 100);
+    // Smooth progress bar update (60fps for luxury feel)
+    const animate = () => {
+        updateProgressBar();
+        requestAnimationFrame(animate);
+    };
+    requestAnimationFrame(animate);
 }
 
 // Immediate fetch on input
 secretInput.addEventListener('input', () => {
+    currentToken = ''; // Force sync on new input
     poll2FA();
 });
 
