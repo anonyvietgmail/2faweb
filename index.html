@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>2FA Auth - Two Factor Authenticator</title>
-    <link rel="icon" type="image/png" href="favicon.png">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -18,69 +17,69 @@
             min-height: 100vh;
             color: #333;
         }
+
         .container {
             background: white;
-            padding: 50px; /* Increased padding for bigger feel */
-            border-radius: 20px; /* Slightly larger border-radius */
-            box-shadow: 0 15px 40px rgba(0,0,0,0.2); /* Bigger shadow */
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
             text-align: center;
-            max-width: 500px; /* Increased max-width for larger frame */
-            width: 90%; /* Flexible width */
+            max-width: 400px;
+            width: 100%;
             position: relative;
         }
+
         h1 {
             color: #007bff;
             margin-bottom: 30px;
-            font-size: 26px; /* Slightly larger title */
+            font-size: 24px;
         }
+
         input[type="text"] {
             width: 100%;
-            padding: 18px;
+            padding: 12px;
             border: 2px solid #ddd;
             border-radius: 8px;
-            font-size: 18px;
+            font-size: 16px;
             margin-bottom: 20px;
             box-sizing: border-box;
             text-align: center;
             letter-spacing: 2px;
-            height: 50px;
-            line-height: 1.4;
         }
+
         input:focus {
             border-color: #007bff;
             outline: none;
         }
-        .auth-label {
-            font-size: 16px;
-            color: #007bff;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
+
         .code-display {
             font-size: 48px;
             font-weight: bold;
             color: #007bff;
             letter-spacing: 8px;
             margin: 20px 0;
-            padding: 25px; /* Increased padding for code box */
+            padding: 20px;
             background: #f7fafc;
             border-radius: 10px;
-            min-height: 70px; /* Taller code box */
-            display: flex;
+            min-height: 60px;
+            display: none;
             justify-content: center;
             align-items: center;
             cursor: pointer;
             transition: background 0.3s;
             user-select: none;
         }
+
         .code-display:hover {
             background: #e9ecef;
         }
+
         .timer {
             font-size: 14px;
             color: #666;
             margin-top: 10px;
         }
+
         .error-msg {
             font-size: 14px;
             color: #e53e3e;
@@ -90,15 +89,27 @@
             border-radius: 5px;
             display: none;
         }
+
         .info-box {
             margin-top: 30px;
             padding: 15px;
-            background: #d4edda;
+            background: #e3f2fd;
             border-radius: 8px;
             font-size: 14px;
-            color: #155724;
-            border-left: 4px solid #28a745;
+            color: #1976d2;
+            border-left: 4px solid #007bff;
         }
+
+        .info-box a {
+            color: #007bff;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .info-box a:hover {
+            text-decoration: underline;
+        }
+
         .copy-toast {
             position: absolute;
             top: 10px;
@@ -114,247 +125,27 @@
             pointer-events: none;
             z-index: 10;
         }
+
         .copy-toast.show {
             opacity: 1;
             transform: translateY(0);
         }
-
-        /* --- CSS cho nút Telegram đã chỉnh sửa --- */
-        .telegram-btn {
-            display: inline-flex;
-            align-items: center; /* Đảm bảo căn giữa dọc cho icon và text */
-            justify-content: center;
-            text-decoration: none;
-            background-color: #0088CC; 
-            color: white;
-            padding: 10px 20px; /* Giảm padding */
-            border-radius: 8px;
-            font-size: 15px; /* Giảm kích thước chữ */
-            font-weight: bold;
-            margin-top: 20px;
-            transition: background-color 0.3s, transform 0.1s;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .telegram-btn:hover {
-            background-color: #007bb6;
-            transform: translateY(-1px);
-        }
-
-        .telegram-btn i {
-            margin-right: 8px; /* Giảm khoảng cách */
-            font-size: 16px; /* Giảm kích thước icon */
-            /* Để khắc phục lệch, đảm bảo icon có cùng chiều cao dòng với text */
-            line-height: 1; 
-        }
     </style>
 </head>
+
 <body>
     <div class="container">
         <h1>🔐 2FA Auth - Two Factor Authenticator</h1>
-        <input type="text" id="secretKey" placeholder="Enter Secret Key" maxlength="100">
-        <div id="authLabel" class="auth-label" style="display: none;">Authorization Code</div>
-        <div id="codeDisplay" class="code-display" style="display: none;">-----</div>
+        <input type="text" id="secretKey" placeholder="Paste Secret Key here..." maxlength="100">
+        <div id="codeDisplay" class="code-display">-----</div>
         <div id="timer" class="timer"></div>
         <div id="errorMsg" class="error-msg"></div>
-        
-       
-        
         <div class="info-box">
-            This website was created by GmailTrust247
+            This website was created by <a href="https://t.me/GmailTrust247" target="_blank">GMAIL TRUST SELLER</a>
         </div>
-         <a href="https://t.me/GmailTrust247" class="telegram-btn" target="_blank">
-            <i class="fa fa-telegram" aria-hidden="true"></i> Support Contact
-        </a>
-        <div id="copyToast" class="copy-toast">Copied to clipboard!</div>
+        <div id="copyToast" class="copy-toast">Code copied!</div>
     </div>
-
-    <script>
-        let isFromUrlLoad = false; // Flag to prevent loop when loading from URL
-
-        // Check Crypto support
-        if (!window.crypto || !window.crypto.subtle) {
-            document.getElementById('errorMsg').textContent = 'Browser does not support Web Crypto API. Use Chrome/Firefox latest.';
-            document.getElementById('errorMsg').style.display = 'block';
-        }
-
-        // Fixed TOTP Implementation using Web Crypto API (RFC 6238 compliant)
-        function base32ToBytes(base32) {
-            const base32chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
-            let bits = '';
-            base32 = base32.toUpperCase().replace(/[^A-Z2-7]/g, '');
-            for (let i = 0; i < base32.length; i++) {
-                const val = base32chars.indexOf(base32.charAt(i));
-                if (val !== -1) {
-                    bits += val.toString(2).padStart(5, '0');
-                }
-            }
-            const bytes = new Uint8Array(Math.floor(bits.length / 8));
-            for (let i = 0; i < bytes.length; i++) {
-                bytes[i] = parseInt(bits.substr(i * 8, 8), 2);
-            }
-            return bytes;
-        }
-
-        async function hmacSha1(keyBytes, dataBytes) {
-            const cryptoKey = await window.crypto.subtle.importKey(
-                'raw', keyBytes, { name: 'HMAC', hash: 'SHA-1' }, false, ['sign']
-            );
-            const signature = await window.crypto.subtle.sign('HMAC', cryptoKey, dataBytes);
-            return new Uint8Array(signature);
-        }
-
-        function hotpTruncate(hmac) {
-            const offset = hmac[hmac.length - 1] & 0x0f;
-            let code = 0;
-            for (let i = 0; i < 4; i++) {
-                code <<= 8;
-                code |= hmac[offset + i] & 0xff;
-            }
-            code &= 0x7fffffff; // Clear MSB
-            return code;
-        }
-
-        async function generateTOTP(secret, epoch = Date.now() / 1000, timeStep = 30, digits = 6) {
-            const keyBytes = base32ToBytes(secret);
-            if (keyBytes.length === 0) {
-                throw new Error('Invalid Base32 secret key');
-            }
-            const counter = BigInt(Math.floor(epoch / timeStep));
-            const counterBytes = new Uint8Array(8);
-            new DataView(counterBytes.buffer).setBigUint64(0, counter, false); // Big-endian
-
-            const hmac = await hmacSha1(keyBytes, counterBytes);
-            const code = hotpTruncate(hmac) % (10 ** digits);
-            return code.toString().padStart(digits, '0');
-        }
-
-        // Copy function with toast
-        async function copyToClipboard(text) {
-            try {
-                await navigator.clipboard.writeText(text);
-                const toast = document.getElementById('copyToast');
-                toast.classList.add('show');
-                setTimeout(() => {
-                    toast.classList.remove('show');
-                }, 2000);
-            } catch (err) {
-                console.error('Copy failed:', err);
-            }
-        }
-
-        // Update URL based on key (without reload)
-        function updateUrl(key) {
-            if (!key.trim()) {
-                // Go back to root
-                window.history.pushState({}, document.title, window.location.origin + window.location.pathname.split('/').slice(0, -1).join('/') + '/');
-            } else {
-                // Set /key
-                const basePath = window.location.pathname.split('/').slice(0, -1).join('/');
-                window.history.pushState({}, document.title, basePath + '/' + key.trim());
-            }
-        }
-
-        async function updateCode() {
-            const secret = document.getElementById('secretKey').value.trim();
-            const errorEl = document.getElementById('errorMsg');
-            const codeEl = document.getElementById('codeDisplay');
-            const labelEl = document.getElementById('authLabel');
-            errorEl.style.display = 'none';
-
-            if (!secret) {
-                codeEl.style.display = 'none';
-                labelEl.style.display = 'none';
-                if (!isFromUrlLoad) {
-                    updateUrl(''); // Clear URL if no key
-                }
-                return;
-            }
-
-            try {
-                const code = await generateTOTP(secret);
-                codeEl.textContent = code;
-                codeEl.style.display = 'block';
-                labelEl.style.display = 'block'; // Show label when code is ready
-
-                // Timer
-                const now = Date.now();
-                const seconds = 30 - (now / 1000 % 30);
-                document.getElementById('timer').textContent = `Next update in: ${Math.ceil(seconds)}s`;
-
-                if (!isFromUrlLoad) {
-                    updateUrl(secret); // Update URL with key
-                }
-            } catch (error) {
-                console.error('TOTP Error Details:', error);
-                codeEl.style.display = 'none';
-                labelEl.style.display = 'none';
-                errorEl.textContent = `Error: ${error.message}. Check console (F12) for details.`;
-                errorEl.style.display = 'block';
-                if (!isFromUrlLoad) {
-                    updateUrl(''); // Clear URL on error
-                }
-            }
-        }
-
-        function startTimer() {
-            setInterval(updateCode, 1000);
-        }
-
-        // Check URL param on load (now supports /key format)
-        window.onload = function() {
-            isFromUrlLoad = true; // Set flag for initial load
-            // First, check for ?key= (old format)
-            const urlParams = new URLSearchParams(window.location.search);
-            let keyFromUrl = urlParams.get('key');
-            
-            // Then, check for /key in pathname (new format, e.g., /abc123)
-            if (!keyFromUrl) {
-                const pathname = window.location.pathname;
-                const pathParts = pathname.split('/').filter(part => part.trim());
-                if (pathParts.length > 0) {
-                    keyFromUrl = pathParts[pathParts.length - 1]; // Last segment as key
-                }
-            }
-            
-            if (keyFromUrl) {
-                document.getElementById('secretKey').value = keyFromUrl;
-            }
-            // Auto start with default or URL key
-            if (document.getElementById('secretKey').value.trim()) {
-                updateCode();
-                startTimer();
-            }
-            isFromUrlLoad = false; // Reset flag after initial load
-        };
-
-        // Auto-generate on input change (for UX) - Debounce to avoid too many URL updates
-        let inputTimeout;
-        document.getElementById('secretKey').addEventListener('input', function() {
-            clearTimeout(inputTimeout);
-            inputTimeout = setTimeout(() => {
-                if (this.value.trim()) {
-                    updateCode();
-                    if (!this.timerStarted) {
-                        startTimer();
-                        this.timerStarted = true;
-                    }
-                } else {
-                    document.getElementById('codeDisplay').style.display = 'none';
-                    document.getElementById('authLabel').style.display = 'none';
-                    this.timerStarted = false;
-                    updateUrl(''); // Clear URL
-                }
-            }, 500); // Debounce 500ms
-        });
-
-        // Click to copy on code display
-        document.getElementById('codeDisplay').addEventListener('click', function() {
-            const code = this.textContent;
-            if (code && code !== '-----' && code !== 'ERROR') {
-                copyToClipboard(code);
-            }
-        });
-    </script>
+    <script src="script.js"></script>
 </body>
+
 </html>
