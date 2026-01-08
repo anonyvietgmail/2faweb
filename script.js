@@ -1,5 +1,5 @@
 /**
- * 2FA Auth - Minimalist API & UI
+ * 2FA Auth - Realtime Speed Optimization
  */
 
 const secretInput = document.getElementById('secretKey');
@@ -9,6 +9,7 @@ const errorMsg = document.getElementById('errorMsg');
 const copyToast = document.getElementById('copyToast');
 
 let currentToken = '';
+let lastKey = '';
 
 async function fetchCode() {
     const key = secretInput.value.trim().replace(/\s/g, '');
@@ -17,13 +18,17 @@ async function fetchCode() {
         return;
     }
 
-    try {
-        // Gọi API rút gọn ngay tại root: domain.com/SECRET
-        const response = await fetch(`/${key}?t=${Date.now()}`);
-        const data = await response.json();
+    if (key === lastKey && currentToken) return;
 
+    try {
+        // 🔥 GỌI TRỰC TIẾP API TRÊN VERCEL (Thay vì AllOrigins chậm chạp)
+        const response = await fetch(`/api/index?key=${key}`);
+        if (!response.ok) return;
+
+        const data = await response.json();
         if (data && data.token) {
             currentToken = data.token;
+            lastKey = key;
             codeDisplay.textContent = currentToken;
             codeDisplay.style.display = 'flex';
             errorMsg.style.display = 'none';
@@ -31,15 +36,28 @@ async function fetchCode() {
     } catch (err) { }
 }
 
-function startLoop() {
-    setInterval(() => {
-        const remaining = 30 - (Math.floor(Date.now() / 1000) % 30);
-        if (timerDisplay) timerDisplay.textContent = `Mã mới sau: ${remaining}s`;
-        if (remaining === 30 && secretInput.value) fetchCode();
-    }, 1000);
+// Vòng lặp cập nhật thời gian mượt mà
+function startTimer() {
+    const tick = () => {
+        const now = Date.now() / 1000;
+        const remaining = 30 - (now % 30);
+
+        if (timerDisplay) {
+            timerDisplay.textContent = `Mã mới sau: ${Math.ceil(remaining)}s`;
+        }
+
+        // Tự động load mã mới ngay trước khi giây cũ kết thúc để cảm giác là tức thời
+        if (remaining > 29.8 && secretInput.value) {
+            fetchCode();
+        }
+    };
+    setInterval(tick, 200); // Check nhanh hơn để bắt kịp khoảnh khắc đổi mã
 }
 
-secretInput.addEventListener('input', fetchCode);
+secretInput.addEventListener('input', () => {
+    currentToken = ''; // Reset để fetch ngay lập tức
+    fetchCode();
+});
 
 codeDisplay.addEventListener('click', () => {
     if (currentToken) {
@@ -51,14 +69,12 @@ codeDisplay.addEventListener('click', () => {
 });
 
 window.onload = () => {
-    startLoop();
+    startTimer();
 
-    // Nếu URL có mã (ví dụ: domain.com/JBSWY...), tự động điền vào ô input
-    const keyFromUrl = window.location.pathname.substring(1).trim();
-    if (keyFromUrl && keyFromUrl.length > 5) {
-        secretInput.value = keyFromUrl;
-        fetchCode();
-    } else if (secretInput.value) {
+    // Lấy mã từ URL cực nhanh
+    const path = window.location.pathname.split('/').pop().trim();
+    if (path && path.length > 5 && !path.includes('.')) {
+        secretInput.value = path;
         fetchCode();
     }
 };

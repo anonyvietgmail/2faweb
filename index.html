@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>2FA Auth - Two Factor Authenticator</title>
+    <link rel="icon" type="image/png" href="favicon.png">
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -62,7 +63,7 @@
             background: #f7fafc;
             border-radius: 10px;
             min-height: 60px;
-            display: none;
+            display: flex;
             justify-content: center;
             align-items: center;
             cursor: pointer;
@@ -100,16 +101,6 @@
             border-left: 4px solid #007bff;
         }
 
-        .info-box a {
-            color: #007bff;
-            text-decoration: none;
-            font-weight: bold;
-        }
-
-        .info-box a:hover {
-            text-decoration: underline;
-        }
-
         .copy-toast {
             position: absolute;
             top: 10px;
@@ -136,15 +127,17 @@
 <body>
     <div class="container">
         <h1>🔐 2FA Auth - Two Factor Authenticator</h1>
-        <input type="text" id="secretKey" placeholder="Paste Secret Key here..." maxlength="100">
-        <div id="codeDisplay" class="code-display">-----</div>
+        <input type="text" id="secretKey" placeholder="Enter Secret Key" maxlength="100" value="JBSWY3DPEHPK3PXP">
+        <div id="codeDisplay" class="code-display" style="display: none;">-----</div>
         <div id="timer" class="timer"></div>
         <div id="errorMsg" class="error-msg"></div>
         <div class="info-box">
-            This website was created by <a href="https://t.me/GmailTrust247" target="_blank">GMAIL TRUST SELLER</a>
+            This website was created by GMAIL TRUST SELLER
         </div>
-        <div id="copyToast" class="copy-toast">Code copied!</div>
+        <div id="copyToast" class="copy-toast">Copied to clipboard!</div>
     </div>
+
+    <!-- Kết hợp JS từ file bên ngoài -->
     <script src="script.js"></script>
 </body>
 
